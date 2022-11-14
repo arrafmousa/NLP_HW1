@@ -458,6 +458,9 @@ def preprocess_train(train_path, threshold):
     statistics.get_word_tag_pair_count(train_path)
     statistics.get_suffix_tag_pair_count(train_path)
     statistics.get_prefix_tag_pair_count(train_path)
+    statistics.get_k_wise_tag_count(train_path)
+    statistics.get_next_word_current_tag_count(train_path)
+    statistics.get_previous_word_current_tag_count(train_path)
 
     # feature2id
     feature2id = Feature2id(statistics, threshold)
