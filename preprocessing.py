@@ -120,7 +120,7 @@ class FeatureStatistics:
             "supra"]
         # Init all features dictionaries
         feature_dict_list = ["f100", "f101", "f102", "f103", "f104", "f105", "f106",
-                             "f107"]  # the feature classes used in the code
+                             "f107", "fCapital"]  # the feature classes used in the code
         self.feature_rep_dict = {fd: OrderedDict() for fd in feature_dict_list}
         '''
         A dictionary containing the counts of each data regarding a feature class. For example in f100, would contain
@@ -248,35 +248,33 @@ class FeatureStatistics:
                 tri_gram = [0, 1, 2]
 
                 while uni_gram[0] < len(split_words):
-                    uni_gram = [i + 1 for i in uni_gram]
-                    bi_gram = [i + 1 for i in bi_gram]
-                    tri_gram = [i + 1 for i in bi_gram]
 
-                    cur_words, cur_tags = split_words[uni_gram[0]].split('_')
-                    if (cur_words, cur_tags) not in self.feature_rep_dict["f105"]:
-                        self.feature_rep_dict["f105"][(cur_word, cur_tags)] = 1
+                    cur_word, cur_tag = split_words[uni_gram[0]].split('_')
+                    if (cur_word, cur_tag) not in self.feature_rep_dict["f103"]:
+                        self.feature_rep_dict["f103"][(cur_word, cur_tag)] = 1
                     else:
-                        self.feature_rep_dict["f105"][(cur_words, cur_tags)] += 1
+                        self.feature_rep_dict["f103"][(cur_word, cur_tag)] += 1
 
                     if bi_gram[1] < len(split_words):
-                        cur_words = (split_words[bi_gram[0]].split('_')[0], split_words[bi_gram[1]].split('_')[0])
-                        cur_tags = (split_words[bi_gram[0]].split('_')[1], split_words[bi_gram[1]].split('_')[1])
-                        if (cur_words, cur_tags) not in self.feature_rep_dict["f105"]:
-                            self.feature_rep_dict["f105"][(cur_word, cur_tags)] = 1
+                        cur_word = (split_words[bi_gram[0]].split('_')[0], split_words[bi_gram[1]].split('_')[0])
+                        cur_tag = (split_words[bi_gram[0]].split('_')[1], split_words[bi_gram[1]].split('_')[1])
+                        if (cur_word, cur_tag) not in self.feature_rep_dict["f104"]:
+                            self.feature_rep_dict["f104"][(cur_word, cur_tag)] = 1
                         else:
-                            self.feature_rep_dict["f105"][(cur_words, cur_tags)] += 1
+                            self.feature_rep_dict["f104"][(cur_word, cur_tag)] += 1
                     if tri_gram[2] < len(split_words):
-                        cur_words = (split_words[tri_gram[0]].split('_')[0], split_words[tri_gram[1]].split('_')[0],
-                                     split_words[tri_gram[2]].split('_')[0])
-                        cur_tags = (split_words[bi_gram[0]].split('_')[1], split_words[bi_gram[1]].split('_')[1],
-                                    split_words[bi_gram[2]].split('_')[1])
-                        if (cur_words, cur_tags) not in self.feature_rep_dict["f105"]:
-                            self.feature_rep_dict["f105"][(cur_word, cur_tags)] = 1
+                        cur_word = (split_words[tri_gram[0]].split('_')[0], split_words[tri_gram[1]].split('_')[0],
+                                    split_words[tri_gram[2]].split('_')[0])
+                        cur_tag = (split_words[tri_gram[0]].split('_')[1], split_words[tri_gram[1]].split('_')[1],
+                                   split_words[tri_gram[2]].split('_')[1])
+                        if (cur_word, cur_tag) not in self.feature_rep_dict["f105"]:
+                            self.feature_rep_dict["f105"][(cur_word, cur_tag)] = 1
                         else:
-                            self.feature_rep_dict["f105"][(cur_words, cur_tags)] += 1
+                            self.feature_rep_dict["f105"][(cur_word, cur_tag)] += 1
 
-                for word_idx in range(len(split_words)):
-                    cur_word, cur_tag = split_words[word_idx].split('_')
+                    uni_gram = [i + 1 for i in uni_gram]
+                    bi_gram = [i + 1 for i in bi_gram]
+                    tri_gram = [i + 1 for i in tri_gram]
 
                 sentence = [("*", "*"), ("*", "*")]
                 for pair in split_words:
@@ -333,7 +331,7 @@ class FeatureStatistics:
                 if line[-1:] == "\n":
                     line = line[:-1]
                 split_words = line.split(' ')
-                for word_idx in range(len(split_words)):
+                for word_idx in range(len(split_words) - 1):
                     _, cur_tag = split_words[word_idx].split('_')
                     next_word, _ = split_words[word_idx + 1].split('_')
 
@@ -353,8 +351,6 @@ class FeatureStatistics:
                         sentence[i - 2][1], sentence[i + 1][0])
 
                     self.histories.append(history)
-
-
 
 
 class Feature2id:
@@ -378,6 +374,7 @@ class Feature2id:
             "f105": OrderedDict(),
             "f106": OrderedDict(),
             "f107": OrderedDict(),
+            "fCapital": OrderedDict()
         }
         self.represent_input_with_features = OrderedDict()
         self.histories_matrix = OrderedDict()
@@ -498,3 +495,4 @@ def read_test(file_path, tagged=True) -> List[Tuple[List[str], List[str]]]:
             sentence[TAG].append("~")
             list_of_sentences.append(sentence)
     return list_of_sentences
+
