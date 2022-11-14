@@ -2,6 +2,7 @@ from scipy import sparse
 from collections import OrderedDict, defaultdict
 import numpy as np
 from typing import List, Dict, Tuple
+from operator import itemgetter
 
 WORD = 0
 TAG = 1
@@ -47,7 +48,7 @@ class FeatureStatistics:
             "s",  # TODO : check with and without if useful
             "es"
         ]
-        self.prefix_list = (
+        self.prefix_list = [
             "an",
             "a",
             "ab",
@@ -116,10 +117,10 @@ class FeatureStatistics:
             "sup",
             "sus",
             "syn",
-            "supra"
-        )
+            "supra"]
         # Init all features dictionaries
-        feature_dict_list = ["f100", "f101", "f102"]  # the feature classes used in the code
+        feature_dict_list = ["f100", "f101", "f102", "f103", "f104", "f105", "f106",
+                             "f107"]  # the feature classes used in the code
         self.feature_rep_dict = {fd: OrderedDict() for fd in feature_dict_list}
         '''
         A dictionary containing the counts of each data regarding a feature class. For example in f100, would contain
@@ -247,6 +248,11 @@ class Feature2id:
             "f100": OrderedDict(),
             "f101": OrderedDict(),
             "f102": OrderedDict(),
+            "f103": OrderedDict(),
+            "f104": OrderedDict(),
+            "f105": OrderedDict(),
+            "f106": OrderedDict(),
+            "f107": OrderedDict(),
         }
         self.represent_input_with_features = OrderedDict()
         self.histories_matrix = OrderedDict()
