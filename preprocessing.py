@@ -132,7 +132,7 @@ class FeatureStatistics:
         self.words_count = defaultdict(int)  # a dictionary with the number of times each word appeared in the text
         self.histories = []  # a list of all the histories seen at the test
 
-    def get_word_tag_pair_count(self, file_path) -> None:
+    def get_word_tag_pair_count(self, file_path) -> None:  # f100
         """
             Extract out of text all word/tag pairs
             @param: file_path: full path of the file to read
@@ -166,7 +166,7 @@ class FeatureStatistics:
 
                     self.histories.append(history)
 
-    def get_suffix_tag_pair_count(self, file_path) -> None:
+    def get_suffix_tag_pair_count(self, file_path) -> None:  # f101
         """
             Extract out of text all suffix/tag pairs
             @param: file_path: full path of the file to read
@@ -200,14 +200,14 @@ class FeatureStatistics:
 
                     self.histories.append(history)
 
-    def get_prefix_tag_pair_count(self, file_path) -> None:
+    def get_prefix_tag_pair_count(self, file_path) -> None:  # f102
         """
                     Extract out of text all suffix/tag pairs
                     @param: file_path: full path of the file to read
                     Updates the histories list
                 """
         with open(file_path) as file:
-            for line in file:
+            for line in file:  # f107
                 if line[-1:] == "\n":
                     line = line[:-1]
                 split_words = line.split(' ')
@@ -230,6 +230,131 @@ class FeatureStatistics:
                         sentence[i - 2][1], sentence[i + 1][0])
 
                     self.histories.append(history)
+
+    def get_k_wise_tag_count(self, file_path) -> None:  # f103-105
+        """
+            Extract out of text all Uni/bi/Tri -grams
+            @param: file_path: full path of the file to read
+            Updates the histories list
+        """
+        with open(file_path) as file:
+            for line in file:
+                if line[-1:] == "\n":
+                    line = line[:-1]
+                split_words = line.split(' ')
+
+                uni_gram = [0]
+                bi_gram = [0, 1]
+                tri_gram = [0, 1, 2]
+
+                while uni_gram[0] < len(split_words):
+                    uni_gram = [i + 1 for i in uni_gram]
+                    bi_gram = [i + 1 for i in bi_gram]
+                    tri_gram = [i + 1 for i in bi_gram]
+
+                    cur_words, cur_tags = split_words[uni_gram[0]].split('_')
+                    if (cur_words, cur_tags) not in self.feature_rep_dict["f105"]:
+                        self.feature_rep_dict["f105"][(cur_word, cur_tags)] = 1
+                    else:
+                        self.feature_rep_dict["f105"][(cur_words, cur_tags)] += 1
+
+                    if bi_gram[1] < len(split_words):
+                        cur_words = (split_words[bi_gram[0]].split('_')[0], split_words[bi_gram[1]].split('_')[0])
+                        cur_tags = (split_words[bi_gram[0]].split('_')[1], split_words[bi_gram[1]].split('_')[1])
+                        if (cur_words, cur_tags) not in self.feature_rep_dict["f105"]:
+                            self.feature_rep_dict["f105"][(cur_word, cur_tags)] = 1
+                        else:
+                            self.feature_rep_dict["f105"][(cur_words, cur_tags)] += 1
+                    if tri_gram[2] < len(split_words):
+                        cur_words = (split_words[tri_gram[0]].split('_')[0], split_words[tri_gram[1]].split('_')[0],
+                                     split_words[tri_gram[2]].split('_')[0])
+                        cur_tags = (split_words[bi_gram[0]].split('_')[1], split_words[bi_gram[1]].split('_')[1],
+                                    split_words[bi_gram[2]].split('_')[1])
+                        if (cur_words, cur_tags) not in self.feature_rep_dict["f105"]:
+                            self.feature_rep_dict["f105"][(cur_word, cur_tags)] = 1
+                        else:
+                            self.feature_rep_dict["f105"][(cur_words, cur_tags)] += 1
+
+                for word_idx in range(len(split_words)):
+                    cur_word, cur_tag = split_words[word_idx].split('_')
+
+                sentence = [("*", "*"), ("*", "*")]
+                for pair in split_words:
+                    sentence.append(tuple(pair.split("_")))
+                sentence.append(("~", "~"))
+
+                for i in range(2, len(sentence) - 1):
+                    history = (
+                        sentence[i][0], sentence[i][1], sentence[i - 1][0], sentence[i - 1][1], sentence[i - 2][0],
+                        sentence[i - 2][1], sentence[i + 1][0])
+
+                    self.histories.append(history)
+
+    def get_previous_word_current_tag_count(self, file_path) -> None:  # f106
+        """
+            Extract out of text all suffix/tag pairs
+            @param: file_path: full path of the file to read
+            Updates the histories list
+        """
+        with open(file_path) as file:
+            for line in file:
+                if line[-1:] == "\n":
+                    line = line[:-1]
+                split_words = line.split(' ')
+                for word_idx in range(len(split_words)):
+                    _, cur_tag = split_words[word_idx].split('_')
+                    prev_word, _ = split_words[word_idx - 1].split('_')
+
+                    if (prev_word, cur_tag) not in self.feature_rep_dict["f106"]:
+                        self.feature_rep_dict["f106"][(prev_word, cur_tag)] = 1
+                    else:
+                        self.feature_rep_dict["f106"][(prev_word, cur_tag)] += 1
+
+                sentence = [("*", "*"), ("*", "*")]
+                for pair in split_words:
+                    sentence.append(tuple(pair.split("_")))
+                sentence.append(("~", "~"))
+
+                for i in range(2, len(sentence) - 1):
+                    history = (
+                        sentence[i][0], sentence[i][1], sentence[i - 1][0], sentence[i - 1][1], sentence[i - 2][0],
+                        sentence[i - 2][1], sentence[i + 1][0])
+
+                    self.histories.append(history)
+
+    def get_next_word_current_tag_count(self, file_path) -> None:  # f107
+        """
+            Extract out of text all suffix/tag pairs
+            @param: file_path: full path of the file to read
+            Updates the histories list
+        """
+        with open(file_path) as file:
+            for line in file:
+                if line[-1:] == "\n":
+                    line = line[:-1]
+                split_words = line.split(' ')
+                for word_idx in range(len(split_words)):
+                    _, cur_tag = split_words[word_idx].split('_')
+                    next_word, _ = split_words[word_idx + 1].split('_')
+
+                    if (next_word, cur_tag) not in self.feature_rep_dict["f107"]:
+                        self.feature_rep_dict["f107"][(next_word, cur_tag)] = 1
+                    else:
+                        self.feature_rep_dict["f107"][(next_word, cur_tag)] += 1
+
+                sentence = [("*", "*"), ("*", "*")]
+                for pair in split_words:
+                    sentence.append(tuple(pair.split("_")))
+                sentence.append(("~", "~"))
+
+                for i in range(2, len(sentence) - 1):
+                    history = (
+                        sentence[i][0], sentence[i][1], sentence[i - 1][0], sentence[i - 1][1], sentence[i - 2][0],
+                        sentence[i - 2][1], sentence[i + 1][0])
+
+                    self.histories.append(history)
+
+
 
 
 class Feature2id:
