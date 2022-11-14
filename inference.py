@@ -2,6 +2,15 @@ from preprocessing import read_test
 from tqdm import tqdm
 
 
+def calculate_probability(sentence, tags, index) -> dict:
+    """
+    :returns dictionary contain tags as key with their respective predicted probability
+    :param sentence: list containing the words in the sentence
+    :param tags: the predicted tags of the past words in the sentence (<index)
+    :param index: the index of the word which we need to calculate the probability of the tags
+    """
+
+
 def memm_viterbi(sentence, pre_trained_weights, feature2id):
     """
     Write your MEMM Viterbi implementation below
