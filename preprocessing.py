@@ -3,7 +3,6 @@ from collections import OrderedDict, defaultdict
 import numpy as np
 from typing import List, Dict, Tuple
 
-
 WORD = 0
 TAG = 1
 
@@ -11,9 +10,116 @@ TAG = 1
 class FeatureStatistics:
     def __init__(self):
         self.n_total_features = 0  # Total number of features accumulated
-
+        self.suffix_list = [
+            "ee",
+            "eer",
+            "er",
+            "ion",
+            "ism",
+            "ity",
+            "ment",
+            "ness",
+            "or",
+            "sion",
+            "ship",
+            "th",
+            "ible",
+            "able",
+            "al",
+            "ant",
+            "ary",
+            "ful",
+            "ic",
+            "ious",
+            "ive",
+            "less",
+            "ous",
+            "y",
+            "ed",
+            "en",
+            "er",
+            "ing",
+            "ize",
+            "ise",
+            "ly",
+            "ward",
+            "wise",
+            "s",  # TODO : check with and without if useful
+            "es"
+        ]
+        self.prefix_list = (
+            "an",
+            "a",
+            "ab",
+            "ac",
+            "as",
+            "com",
+            "ad",
+            "ante",
+            "anti",
+            "auto",
+            "ben",
+            "bi",
+            "circu",
+            "counter",
+            "contra",
+            "con",
+            "co",
+            "de",
+            "di",
+            "dis",
+            "e",
+            "eu",
+            "ex",
+            "exo",
+            "fore",
+            "hemi",
+            "hyper",
+            "hypo",
+            "il",
+            "inter",
+            "intra",
+            "macro",
+            "mal",
+            "micro",
+            "mis",
+            "mono",
+            "multi",
+            "ecto",
+            "extra",
+            "extro",
+            "im",
+            "in",
+            "ir",
+            "non",
+            "ob",
+            "omni",
+            "over",
+            "peri",
+            "poly",
+            "post",
+            "pre",
+            "pro",
+            "quad",
+            "re",
+            "semi",
+            "sub",
+            "super",
+            "sym",
+            "trans",
+            "tri",
+            "ultra",
+            "un",
+            "uni",
+            "oc",
+            "op",
+            "sup",
+            "sus",
+            "syn",
+            "supra"
+        )
         # Init all features dictionaries
-        feature_dict_list = ["f100"]  # the feature classes used in the code
+        feature_dict_list = ["f100", "f101", "f102"]  # the feature classes used in the code
         self.feature_rep_dict = {fd: OrderedDict() for fd in feature_dict_list}
         '''
         A dictionary containing the counts of each data regarding a feature class. For example in f100, would contain
@@ -59,6 +165,71 @@ class FeatureStatistics:
 
                     self.histories.append(history)
 
+    def get_suffix_tag_pair_count(self, file_path) -> None:
+        """
+            Extract out of text all suffix/tag pairs
+            @param: file_path: full path of the file to read
+            Updates the histories list
+        """
+        with open(file_path) as file:
+            for line in file:
+                if line[-1:] == "\n":
+                    line = line[:-1]
+                split_words = line.split(' ')
+                for word_idx in range(len(split_words)):
+                    cur_word, cur_tag = split_words[word_idx].split('_')
+                    for i in range(-4, -1):
+                        cur_suffix = cur_word[i:]
+                        if len(cur_word) > len(cur_suffix) + 1 and cur_suffix in self.suffix_list:
+                            # update the dict
+                            if (cur_suffix, cur_tag) not in self.feature_rep_dict["f101"]:
+                                self.feature_rep_dict["f101"][(cur_suffix, cur_tag)] = 1
+                            else:
+                                self.feature_rep_dict["f101"][(cur_suffix, cur_tag)] += 1
+
+                sentence = [("*", "*"), ("*", "*")]
+                for pair in split_words:
+                    sentence.append(tuple(pair.split("_")))
+                sentence.append(("~", "~"))
+
+                for i in range(2, len(sentence) - 1):
+                    history = (
+                        sentence[i][0], sentence[i][1], sentence[i - 1][0], sentence[i - 1][1], sentence[i - 2][0],
+                        sentence[i - 2][1], sentence[i + 1][0])
+
+                    self.histories.append(history)
+
+    def get_prefix_tag_pair_count(self, file_path) -> None:
+        """
+                    Extract out of text all suffix/tag pairs
+                    @param: file_path: full path of the file to read
+                    Updates the histories list
+                """
+        with open(file_path) as file:
+            for line in file:
+                if line[-1:] == "\n":
+                    line = line[:-1]
+                split_words = line.split(' ')
+                for word_idx in range(len(split_words)):
+                    cur_word, cur_tag = split_words[word_idx].split('_')
+                    for prefix in self.prefix_list:
+                        if cur_word.startswith(prefix):
+                            if (prefix, cur_tag) not in self.feature_rep_dict["f102"]:
+                                self.feature_rep_dict["f102"][(prefix, cur_tag)] = 1
+                            else:
+                                self.feature_rep_dict["f102"][(prefix, cur_tag)] += 1
+                sentence = [("*", "*"), ("*", "*")]
+                for pair in split_words:
+                    sentence.append(tuple(pair.split("_")))
+                sentence.append(("~", "~"))
+
+                for i in range(2, len(sentence) - 1):
+                    history = (
+                        sentence[i][0], sentence[i][1], sentence[i - 1][0], sentence[i - 1][1], sentence[i - 2][0],
+                        sentence[i - 2][1], sentence[i + 1][0])
+
+                    self.histories.append(history)
+
 
 class Feature2id:
     def __init__(self, feature_statistics: FeatureStatistics, threshold: int):
@@ -74,6 +245,8 @@ class Feature2id:
         # Init all features dictionaries
         self.feature_to_idx = {
             "f100": OrderedDict(),
+            "f101": OrderedDict(),
+            "f102": OrderedDict(),
         }
         self.represent_input_with_features = OrderedDict()
         self.histories_matrix = OrderedDict()
@@ -126,7 +299,7 @@ class Feature2id:
                 self.feature_statistics.histories), self.n_total_features), dtype=bool)
 
 
-def represent_input_with_features(history: Tuple, dict_of_dicts: Dict[str, Dict[Tuple[str, str], int]])\
+def represent_input_with_features(history: Tuple, dict_of_dicts: Dict[str, Dict[Tuple[str, str], int]]) \
         -> List[int]:
     """
         Extract feature vector in per a given history
@@ -141,6 +314,9 @@ def represent_input_with_features(history: Tuple, dict_of_dicts: Dict[str, Dict[
     # f100
     if (c_word, c_tag) in dict_of_dicts["f100"]:
         features.append(dict_of_dicts["f100"][(c_word, c_tag)])
+    # f101
+    if (c_word, c_tag) in dict_of_dicts["f101"]:
+        features.append(dict_of_dicts["f101"][(c_word, c_tag)])
 
     return features
 
@@ -149,6 +325,8 @@ def preprocess_train(train_path, threshold):
     # Statistics
     statistics = FeatureStatistics()
     statistics.get_word_tag_pair_count(train_path)
+    statistics.get_suffix_tag_pair_count(train_path)
+    statistics.get_prefix_tag_pair_count(train_path)
 
     # feature2id
     feature2id = Feature2id(statistics, threshold)
