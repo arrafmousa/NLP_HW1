@@ -11,113 +11,113 @@ TAG = 1
 class FeatureStatistics:
     def __init__(self):
         self.n_total_features = 0  # Total number of features accumulated
-        self.suffix_list = [
-            "ee",
-            "eer",
-            "er",
-            "ion",
-            "ism",
-            "ity",
-            "ment",
-            "ness",
-            "or",
-            "sion",
-            "ship",
-            "th",
-            "ible",
-            "able",
-            "al",
-            "ant",
-            "ary",
-            "ful",
-            "ic",
-            "ious",
-            "ive",
-            "less",
-            "ous",
-            "y",
-            "ed",
-            "en",
-            "er",
-            "ing",
-            "ize",
-            "ise",
-            "ly",
-            "ward",
-            "wise",
-            "s",  # TODO : check with and without if useful
-            "es"
-        ]
-        self.prefix_list = [
-            "an",
-            "a",
-            "ab",
-            "ac",
-            "as",
-            "com",
-            "ad",
-            "ante",
-            "anti",
-            "auto",
-            "ben",
-            "bi",
-            "circu",
-            "counter",
-            "contra",
-            "con",
-            "co",
-            "de",
-            "di",
-            "dis",
-            "e",
-            "eu",
-            "ex",
-            "exo",
-            "fore",
-            "hemi",
-            "hyper",
-            "hypo",
-            "il",
-            "inter",
-            "intra",
-            "macro",
-            "mal",
-            "micro",
-            "mis",
-            "mono",
-            "multi",
-            "ecto",
-            "extra",
-            "extro",
-            "im",
-            "in",
-            "ir",
-            "non",
-            "ob",
-            "omni",
-            "over",
-            "peri",
-            "poly",
-            "post",
-            "pre",
-            "pro",
-            "quad",
-            "re",
-            "semi",
-            "sub",
-            "super",
-            "sym",
-            "trans",
-            "tri",
-            "ultra",
-            "un",
-            "uni",
-            "oc",
-            "op",
-            "sup",
-            "sus",
-            "syn",
-            "supra"]
+        # self.suffix_list = [
+        #     "ee",
+        #     "eer",
+        #     "er",
+        #     "ion",
+        #     "ism",
+        #     "ity",
+        #     "ment",
+        #     "ness",
+        #     "or",
+        #     "sion",
+        #     "ship",
+        #     "th",
+        #     "ible",
+        #     "able",
+        #     "al",
+        #     "ant",
+        #     "ary",
+        #     "ful",
+        #     "ic",
+        #     "ious",
+        #     "ive",
+        #     "less",
+        #     "ous",
+        #     "y",
+        #     "ed",
+        #     "en",
+        #     "er",
+        #     "ing",
+        #     "ize",
+        #     "ise",
+        #     "ly",
+        #     "ward",
+        #     "wise",
+        #     "s",  # TODO : check with and without if useful
+        #     "es"
+        # ]
+        # self.prefix_list = [
+        #     "an",
+        #     "a",
+        #     "ab",
+        #     "ac",
+        #     "as",
+        #     "com",
+        #     "ad",
+        #     "ante",
+        #     "anti",
+        #     "auto",
+        #     "ben",
+        #     "bi",
+        #     "circu",
+        #     "counter",
+        #     "contra",
+        #     "con",
+        #     "co",
+        #     "de",
+        #     "di",
+        #     "dis",
+        #     "e",
+        #     "eu",
+        #     "ex",
+        #     "exo",
+        #     "fore",
+        #     "hemi",
+        #     "hyper",
+        #     "hypo",
+        #     "il",
+        #     "inter",
+        #     "intra",
+        #     "macro",
+        #     "mal",
+        #     "micro",
+        #     "mis",
+        #     "mono",
+        #     "multi",
+        #     "ecto",
+        #     "extra",
+        #     "extro",
+        #     "im",
+        #     "in",
+        #     "ir",
+        #     "non",
+        #     "ob",
+        #     "omni",
+        #     "over",
+        #     "peri",
+        #     "poly",
+        #     "post",
+        #     "pre",
+        #     "pro",
+        #     "quad",
+        #     "re",
+        #     "semi",
+        #     "sub",
+        #     "super",
+        #     "sym",
+        #     "trans",
+        #     "tri",
+        #     "ultra",
+        #     "un",
+        #     "uni",
+        #     "oc",
+        #     "op",
+        #     "sup",
+        #     "sus",
+        #     "syn",
+        #     "supra"]
         # Init all features dictionaries
         feature_dict_list = ["f100", "f101", "f102", "f103", "f104", "f105", "f106",
                              "f107", "fCapital"]  # the feature classes used in the code
@@ -181,7 +181,7 @@ class FeatureStatistics:
                     cur_word, cur_tag = split_words[word_idx].split('_')
                     for i in range(-4, -1):
                         cur_suffix = cur_word[i:]
-                        if len(cur_word) > len(cur_suffix) + 1 and cur_suffix in self.suffix_list:
+                        if len(cur_word) > i:
                             # update the dict
                             if (cur_suffix, cur_tag) not in self.feature_rep_dict["f101"]:
                                 self.feature_rep_dict["f101"][(cur_suffix, cur_tag)] = 1
@@ -213,8 +213,9 @@ class FeatureStatistics:
                 split_words = line.split(' ')
                 for word_idx in range(len(split_words)):
                     cur_word, cur_tag = split_words[word_idx].split('_')
-                    for prefix in self.prefix_list:
-                        if cur_word.startswith(prefix):
+                    for i in range(1, 5):
+                        prefix = cur_word[:i]
+                        if len(cur_word) > i:
                             if (prefix, cur_tag) not in self.feature_rep_dict["f102"]:
                                 self.feature_rep_dict["f102"][(prefix, cur_tag)] = 1
                             else:
@@ -249,28 +250,25 @@ class FeatureStatistics:
 
                 while uni_gram[0] < len(split_words):
 
-                    cur_word, cur_tag = split_words[uni_gram[0]].split('_')
-                    if (cur_word, cur_tag) not in self.feature_rep_dict["f103"]:
-                        self.feature_rep_dict["f103"][(cur_word, cur_tag)] = 1
+                    cur_tag = split_words[uni_gram[0]].split('_')[1]
+                    if cur_tag not in self.feature_rep_dict["f105"]:
+                        self.feature_rep_dict["f105"][cur_tag] = 1
                     else:
-                        self.feature_rep_dict["f103"][(cur_word, cur_tag)] += 1
+                        self.feature_rep_dict["f105"][cur_tag] += 1
 
                     if bi_gram[1] < len(split_words):
-                        cur_word = (split_words[bi_gram[0]].split('_')[0], split_words[bi_gram[1]].split('_')[0])
                         cur_tag = (split_words[bi_gram[0]].split('_')[1], split_words[bi_gram[1]].split('_')[1])
-                        if (cur_word, cur_tag) not in self.feature_rep_dict["f104"]:
-                            self.feature_rep_dict["f104"][(cur_word, cur_tag)] = 1
+                        if cur_tag not in self.feature_rep_dict["f104"]:
+                            self.feature_rep_dict["f104"][cur_tag] = 1
                         else:
-                            self.feature_rep_dict["f104"][(cur_word, cur_tag)] += 1
+                            self.feature_rep_dict["f104"][cur_tag] += 1
                     if tri_gram[2] < len(split_words):
-                        cur_word = (split_words[tri_gram[0]].split('_')[0], split_words[tri_gram[1]].split('_')[0],
-                                    split_words[tri_gram[2]].split('_')[0])
                         cur_tag = (split_words[tri_gram[0]].split('_')[1], split_words[tri_gram[1]].split('_')[1],
                                    split_words[tri_gram[2]].split('_')[1])
-                        if (cur_word, cur_tag) not in self.feature_rep_dict["f105"]:
-                            self.feature_rep_dict["f105"][(cur_word, cur_tag)] = 1
+                        if cur_tag not in self.feature_rep_dict["f103"]:
+                            self.feature_rep_dict["f103"][cur_tag] = 1
                         else:
-                            self.feature_rep_dict["f105"][(cur_word, cur_tag)] += 1
+                            self.feature_rep_dict["f103"][cur_tag] += 1
 
                     uni_gram = [i + 1 for i in uni_gram]
                     bi_gram = [i + 1 for i in bi_gram]
@@ -283,10 +281,11 @@ class FeatureStatistics:
 
                 for i in range(2, len(sentence) - 1):
                     history = (
-                        sentence[i][0], sentence[i][1], sentence[i - 1][0], sentence[i - 1][1], sentence[i - 2][0],
+                        sentence[i][0], sentence[i][1], sentence[i - 1][0], sentence[i - 1][1],
+                        sentence[i - 2][0],
                         sentence[i - 2][1], sentence[i + 1][0])
 
-                    self.histories.append(history)
+                self.histories.append(history)
 
     def get_previous_word_current_tag_count(self, file_path) -> None:  # f106
         """
@@ -495,4 +494,3 @@ def read_test(file_path, tagged=True) -> List[Tuple[List[str], List[str]]]:
             sentence[TAG].append("~")
             list_of_sentences.append(sentence)
     return list_of_sentences
-
