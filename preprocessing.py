@@ -121,8 +121,7 @@ class FeatureStatistics:
         # Init all features dictionaries
         feature_dict_list = ["f100", "f101", "f102", "f103", "f104", "f105", "f106",
                              "f107", "fCapital"]  # the feature classes used in the code
-        self.\
-            feature_rep_dict = {fd: OrderedDict() for fd in feature_dict_list}
+        self.feature_rep_dict = {fd: OrderedDict() for fd in feature_dict_list}
         '''
         A dictionary containing the counts of each data regarding a feature class. For example in f100, would contain
         the number of times each (word, tag) pair appeared in the text.
@@ -437,14 +436,50 @@ def represent_input_with_features(history: Tuple, dict_of_dicts: Dict[str, Dict[
     """
     c_word = history[0]
     c_tag = history[1]
+    p_word = history[2]
+    p_tag = history[3]
+    pp_word = history[4]
+    pp_tag = history[5]
+    n_word = history[6] # next word
     features = []
 
     # f100
     if (c_word, c_tag) in dict_of_dicts["f100"]:
         features.append(dict_of_dicts["f100"][(c_word, c_tag)])
+
     # f101
-    if (c_word, c_tag) in dict_of_dicts["f101"]:
-        features.append(dict_of_dicts["f101"][(c_word, c_tag)])
+    for i in range(-4, -1):
+        suffix = c_word[i:]
+        if len(c_word) > i:
+            if (suffix, c_tag) in dict_of_dicts["f101"]:
+                features.append(dict_of_dicts["f101"][(suffix, c_tag)])
+
+    # f102
+    for i in range(1, 5):
+        prefix = c_word[:i]
+        if len(c_word) > i:
+            if (prefix, c_tag) in dict_of_dicts["f102"]:
+                features.append(dict_of_dicts["f102"][(prefix, c_tag)])
+
+    # f103
+    if (pp_tag, p_tag, c_tag) in dict_of_dicts["f103"]:
+        features.append(dict_of_dicts["f103"][(pp_tag, p_tag, c_tag)])
+
+    # f104
+    if (p_tag, c_tag) in dict_of_dicts["f104"]:
+        features.append(dict_of_dicts["f104"][(p_tag, c_tag)])
+
+    # f105
+    if c_tag in dict_of_dicts["f105"]:
+        features.append(dict_of_dicts["f105"][c_tag])
+
+    # f106
+    if (p_word, c_tag) in dict_of_dicts["f106"]:
+        features.append(dict_of_dicts["f106"][(p_word, c_tag)])
+
+    # f107
+    if (n_word, c_tag) in dict_of_dicts["f107"]:
+        features.append(dict_of_dicts["f107"][(n_word, c_tag)])
 
     return features
 
