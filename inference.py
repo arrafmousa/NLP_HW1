@@ -1,15 +1,37 @@
-from preprocessing import read_test
+from preprocessing import read_test, represent_input_with_features
 from tqdm import tqdm
+import math
 
 
-def calculate_probability(sentence, tags, index) -> dict:
+def calculate_probability(sentence, tags, index, v, feature2id: Feature2id, featureStatistics: FeatureStatistics) -> dict:
     """
-    :returns dictionary contain tags as key with their respective predicted probability
+    :returns dictionary contain all possible tags as key with their respective predicted probability
     :param sentence: list containing the words in the sentence
     :param tags: the predicted tags of the past words in the sentence (<index)
     :param index: the index of the word which we need to calculate the probability of the tags
+    :param v: the weights vector
     """
 
+    exp_scores = {}
+    exp_scores_sum = 0
+    # calculate score from v and features vector
+    for y in featureStatistics.tags:
+        x_y = sentence[i], y, sentence[i - 1], tags[i - 1], sentence[i - 2], tags[i - 2], sentence[i + 1]
+        f_vector = represent_input_with_features(x_y, feature2id.feature_to_idx)
+        score = 0
+        for idx in f_vector:
+            score += v[idx]
+        exp_score = math.exp(score)
+        exp_scores[y] = exp_score
+        exp_scores_sum += exp_score
+
+
+    probs = {}
+    # calculate probabilities
+    for y in featureStatistics.tags:
+        probs[y] = exp_scores[y] / exp_scores_sum
+
+    return probs
 
 def memm_viterbi(sentence, pre_trained_weights, feature2id):
     """

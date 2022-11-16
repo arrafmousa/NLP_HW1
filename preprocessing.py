@@ -121,7 +121,8 @@ class FeatureStatistics:
         # Init all features dictionaries
         feature_dict_list = ["f100", "f101", "f102", "f103", "f104", "f105", "f106",
                              "f107", "fCapital"]  # the feature classes used in the code
-        self.feature_rep_dict = {fd: OrderedDict() for fd in feature_dict_list}
+        self.\
+            feature_rep_dict = {fd: OrderedDict() for fd in feature_dict_list}
         '''
         A dictionary containing the counts of each data regarding a feature class. For example in f100, would contain
         the number of times each (word, tag) pair appeared in the text.
