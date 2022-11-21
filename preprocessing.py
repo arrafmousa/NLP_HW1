@@ -120,8 +120,8 @@ class FeatureStatistics:
         #     "supra"]
         # Init all features dictionaries
         feature_dict_list = ["f100", "f101", "f102", "f103", "f104", "f105", "f106",
-                             "f107", "fCapital",
-                             "fNumeric"]  # the feature classes used in the code #TODO : fCapital and so on ..
+                             "f107", "fCapital", "fAllCapital", "fNumeric", "fHyphen", "fContainsDigit", "fFirst",
+                             "fLast"]  # the feature classes used in the code #TODO : fCapital and so on ..
         self.feature_rep_dict = {fd: OrderedDict() for fd in feature_dict_list}
         '''
         A dictionary containing the counts of each data regarding a feature class. For example in f100, would contain
@@ -352,7 +352,7 @@ class FeatureStatistics:
 
                     self.histories.append(history)
 
-    def get_capital_letter_tag_count(self, file_path) -> None:
+    def get_features_tag_count(self, file_path) -> None:  # all other features
         with open(file_path) as file:
             for line in file:
                 if line[-1:] == "\n":
@@ -360,18 +360,51 @@ class FeatureStatistics:
                 split_words = line.split(' ')
                 for word_idx in range(len(split_words)):
                     cur_word, cur_tag = split_words[word_idx].split('_')
+
+                    # fCapital
                     if cur_word[0].isupper():
-                        if (cur_word, cur_tag) not in self.feature_rep_dict["fCapital"]:
-                            self.feature_rep_dict["fCapital"][(cur_word, cur_tag)] = 1
+                        if cur_tag not in self.feature_rep_dict["fCapital"]:
+                            self.feature_rep_dict["fCapital"][cur_tag] = 1
                         else:
-                            self.feature_rep_dict["fCapital"][(cur_word, cur_tag)] += 1
+                            self.feature_rep_dict["fCapital"][cur_tag] += 1
+                    # fAllCapital
+                    if cur_word.isupper():
+                        if cur_tag not in self.feature_rep_dict["fAllCapital"]:
+                            self.feature_rep_dict["fAllCapital"][cur_tag] = 1
+                        else:
+                            self.feature_rep_dict["fCapital"][cur_tag] += 1
+                    # fNumeric
                     if cur_word.isnumeric():
                         if cur_tag not in self.feature_rep_dict["fNumeric"]:
                             self.feature_rep_dict["fNumeric"][cur_tag] = 1
-                            print("new " + cur_tag)
+                            #print("new " + cur_tag)
                         else:
                             self.feature_rep_dict["fNumeric"][cur_tag] += 1
                             # print("added to " + cur_tag)
+                    # fHyphen
+                    if cur_word.find('-') != -1:
+                        if cur_tag not in self.feature_rep_dict["fHyphen"]:
+                            self.feature_rep_dict["fHyphen"][cur_tag] = 1
+                        else:
+                            self.feature_rep_dict["fHyphen"][cur_tag] += 1
+                    # fContainsDigit
+                    if any(chr.isdigit() for chr in cur_word) != -1:
+                        if cur_tag not in self.feature_rep_dict["fContainsDigit"]:
+                            self.feature_rep_dict["fContainsDigit"][cur_tag] = 1
+                        else:
+                            self.feature_rep_dict["fContainsDigit"][cur_tag] += 1
+                    # fFirst
+                    if word_idx == 0:
+                        if cur_tag not in self.feature_rep_dict["fFirst"]:
+                            self.feature_rep_dict["fFirst"][cur_tag] = 1
+                        else:
+                            self.feature_rep_dict["fFirst"][cur_tag] += 1
+                    # fLast
+                    if word_idx == len(split_words):
+                        if cur_tag not in self.feature_rep_dict["fLast"]:
+                            self.feature_rep_dict["fLast"][cur_tag] = 1
+                        else:
+                            self.feature_rep_dict["fLast"][cur_tag] += 1
 
                 sentence = [("*", "*"), ("*", "*")]
                 for pair in split_words:
@@ -408,7 +441,12 @@ class Feature2id:
             "f106": OrderedDict(),
             "f107": OrderedDict(),
             "fCapital": OrderedDict(),
-            "fNumeric": OrderedDict()
+            "fAllCapital": OrderedDict(),
+            "fNumeric": OrderedDict(),
+            "fHyphen": OrderedDict(),
+            "fContainsDigit": OrderedDict(),
+            "fFirst": OrderedDict(),
+            "fLast": OrderedDict(),
         }
         self.represent_input_with_features = OrderedDict()
         self.histories_matrix = OrderedDict()
@@ -517,18 +555,43 @@ def represent_input_with_features(history: Tuple, dict_of_dicts: Dict[str, Dict[
         features.append(dict_of_dicts["f107"][(n_word, c_tag)])
 
     # fCapital
-    if str(c_word)[0].isupper():
+    if str(c_word[0]).isupper():
         try:
             features.append(dict_of_dicts["fCapital"][c_tag])
         except:
             pass
 
+    # fAllCapital
+    if c_word.isupper():
+        if c_tag in dict_of_dicts["fAllCapital"]:
+            features.append(dict_of_dicts["fAllCapital"][c_tag])
+
     # fNumeric
     if str(c_word).isnumeric():
         try:
-            features.append(dict_of_dicts["fCapital"][c_tag])
+            features.append(dict_of_dicts["fNumeric"][c_tag])
         except:
             pass
+
+    # fHyphen
+    if c_word.find('-') != -1:
+        if c_tag in dict_of_dicts["fHyphen"]:
+            features.append(dict_of_dicts["fHyphen"][c_tag])
+
+    #fContainsDigit
+    if any(chr.isdigit() for chr in c_word):
+       if c_tag in dict_of_dicts["fContainsDigit"]:
+           features.append(dict_of_dicts["fContainsDigit"][c_tag])
+
+    # fFirst
+    if p_word == '*':
+        if c_tag in dict_of_dicts["fFirst"]:
+            features.append(dict_of_dicts["fFirst"][c_tag])
+
+    # fLast
+    if n_word == '~':
+        if c_tag in dict_of_dicts["fLast"]:
+            features.append(dict_of_dicts["fLast"][c_tag])
 
     return features
 
