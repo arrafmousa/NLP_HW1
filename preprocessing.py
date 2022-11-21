@@ -120,7 +120,8 @@ class FeatureStatistics:
         #     "supra"]
         # Init all features dictionaries
         feature_dict_list = ["f100", "f101", "f102", "f103", "f104", "f105", "f106",
-                             "f107", "fCapital"]  # the feature classes used in the code
+                             "f107", "fCapital",
+                             "fNumeric"]  # the feature classes used in the code #TODO : fCapital and so on ..
         self.feature_rep_dict = {fd: OrderedDict() for fd in feature_dict_list}
         '''
         A dictionary containing the counts of each data regarding a feature class. For example in f100, would contain
@@ -351,6 +352,39 @@ class FeatureStatistics:
 
                     self.histories.append(history)
 
+    def get_capital_letter_tag_count(self, file_path) -> None:
+        with open(file_path) as file:
+            for line in file:
+                if line[-1:] == "\n":
+                    line = line[:-1]
+                split_words = line.split(' ')
+                for word_idx in range(len(split_words)):
+                    cur_word, cur_tag = split_words[word_idx].split('_')
+                    if cur_word[0].isupper():
+                        if (cur_word, cur_tag) not in self.feature_rep_dict["fCapital"]:
+                            self.feature_rep_dict["fCapital"][(cur_word, cur_tag)] = 1
+                        else:
+                            self.feature_rep_dict["fCapital"][(cur_word, cur_tag)] += 1
+                    if cur_word.isnumeric():
+                        if cur_tag not in self.feature_rep_dict["fNumeric"]:
+                            self.feature_rep_dict["fNumeric"][cur_tag] = 1
+                            print("new " + cur_tag)
+                        else:
+                            self.feature_rep_dict["fNumeric"][cur_tag] += 1
+                            # print("added to " + cur_tag)
+
+                sentence = [("*", "*"), ("*", "*")]
+                for pair in split_words:
+                    sentence.append(tuple(pair.split("_")))
+                sentence.append(("~", "~"))
+
+                for i in range(2, len(sentence) - 1):
+                    history = (
+                        sentence[i][0], sentence[i][1], sentence[i - 1][0], sentence[i - 1][1], sentence[i - 2][0],
+                        sentence[i - 2][1], sentence[i + 1][0])
+
+                    self.histories.append(history)
+
 
 class Feature2id:
     def __init__(self, feature_statistics: FeatureStatistics, threshold: int):
@@ -373,7 +407,8 @@ class Feature2id:
             "f105": OrderedDict(),
             "f106": OrderedDict(),
             "f107": OrderedDict(),
-            "fCapital": OrderedDict()
+            "fCapital": OrderedDict(),
+            "fNumeric": OrderedDict()
         }
         self.represent_input_with_features = OrderedDict()
         self.histories_matrix = OrderedDict()
@@ -480,7 +515,7 @@ def represent_input_with_features(history: Tuple, dict_of_dicts: Dict[str, Dict[
     # f107
     if (n_word, c_tag) in dict_of_dicts["f107"]:
         features.append(dict_of_dicts["f107"][(n_word, c_tag)])
-
+    #TODO : fCapital and fNumeric
     return features
 
 
@@ -493,7 +528,7 @@ def preprocess_train(train_path, threshold):
     statistics.get_k_wise_tag_count(train_path)
     statistics.get_next_word_current_tag_count(train_path)
     statistics.get_previous_word_current_tag_count(train_path)
-
+    statistics.get_capital_letter_tag_count(train_path)
     # feature2id
     feature2id = Feature2id(statistics, threshold)
     feature2id.get_features_idx()
