@@ -475,7 +475,7 @@ def represent_input_with_features(history: Tuple, dict_of_dicts: Dict[str, Dict[
     p_tag = history[3]
     pp_word = history[4]
     pp_tag = history[5]
-    n_word = history[6] # next word
+    n_word = history[6]  # next word
     features = []
 
     # f100
@@ -515,7 +515,21 @@ def represent_input_with_features(history: Tuple, dict_of_dicts: Dict[str, Dict[
     # f107
     if (n_word, c_tag) in dict_of_dicts["f107"]:
         features.append(dict_of_dicts["f107"][(n_word, c_tag)])
-    #TODO : fCapital and fNumeric
+
+    # fCapital
+    if str(c_word)[0].isupper():
+        try:
+            features.append(dict_of_dicts["fCapital"][c_tag])
+        except:
+            pass
+
+    # fNumeric
+    if str(c_word).isnumeric():
+        try:
+            features.append(dict_of_dicts["fCapital"][c_tag])
+        except:
+            pass
+
     return features
 
 

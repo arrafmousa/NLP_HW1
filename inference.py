@@ -23,7 +23,7 @@ def calculate_probability(sentence, prev_tagging, index, v, feature2id: Feature2
     exp_scores_sum = 0
     # calculate score from v and features vector
     for y in tags:
-        x_y = sentence[index], y, sentence[index - 1], prev_tagging[0], sentence[index - 2], prev_tagging[1] \
+        x_y = sentence[index], y, sentence[index - 1], prev_tagging[1], sentence[index - 2], prev_tagging[0] \
             , sentence[index + 1]
         f_vector = represent_input_with_features(x_y, feature2id.feature_to_idx)
         score = 0
@@ -48,10 +48,11 @@ def memm_viterbi(sentence, pre_trained_weights, feature2id, tags, beam_k=None):
     Implement q efficiently (refer to conditional probability definition in MEMM slides)
     """
     tgs_idx = list(tags)
+    tgs_idx.append("*")
     n = len(sentence)
     # pi [k,u,v] = what is the maximum probability of the sentence with length k to end in the labels u, v
-    pi = np.zeros((n, len(tags), len(tags)))
-    bp = np.zeros((n, len(tags), len(tags)))
+    pi = np.zeros((n, len(tgs_idx), len(tgs_idx)))
+    bp = np.zeros((n, len(tgs_idx), len(tgs_idx)))
 
     # initialize
     for u in range(len(tgs_idx)):
@@ -62,7 +63,7 @@ def memm_viterbi(sentence, pre_trained_weights, feature2id, tags, beam_k=None):
                 pi[0][u][v] = 0
 
     # inductive step / with cropping up to k
-    for k in range(len(sentence)):
+    for k in range(1, len(sentence)):
         for u in range(len(tgs_idx)):  # w u v
             for t in range(len(tgs_idx)):
                 # find max and argmax
@@ -71,11 +72,12 @@ def memm_viterbi(sentence, pre_trained_weights, feature2id, tags, beam_k=None):
                 if pi[k - 1][t][u] == 0:
                     continue
                 else:
-                    probs = calculate_probability(sentence, [tags[t], tags[u]], k,
+                    probs = calculate_probability(sentence, [tgs_idx[t], tgs_idx[u]], k,
                                                   pre_trained_weights,
-                                                  feature2id, tags)
+                                                  feature2id, tgs_idx)
                     for v in range(len(tgs_idx)):
-                        prob_uv_given_t = pi[k - 1][t][u] * probs[v]
+                        prob_v = probs.get(v) if v in probs.keys() else 0
+                        prob_uv_given_t = pi[k - 1][t][u] * prob_v
                         if prob_uv_given_t > max_prob:
                             max_prob = prob_uv_given_t
                             max_label = t
@@ -88,12 +90,6 @@ def memm_viterbi(sentence, pre_trained_weights, feature2id, tags, beam_k=None):
             idx = np.argpartition(pi[k].flatten(), -beam_k)
             threshold = min(pi[k].flatten()[idx[-beam_k:]])
             pi[k][pi[k][:][:] < threshold] = 0
-
-        # s = [[str(e) for e in row] for row in pi[k][:][:]]
-        # lens = [max(map(len, col)) for col in zip(*s)]
-        # fmt = '\t'.join('{{:{}}}'.format(x) for x in lens)
-        # table = [fmt.format(*row) for row in s]
-        # print('\n'.join(table))
 
     pred_u, pred_v = unravel_index(pi[0].argmax(), pi[0].shape)
     predictions = []
