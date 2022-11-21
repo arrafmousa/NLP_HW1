@@ -76,14 +76,11 @@ def memm_viterbi(sentence, pre_trained_weights, feature2id, tags, beam_k=None):
                                                   pre_trained_weights,
                                                   feature2id, tgs_idx)
                     for v in range(len(tgs_idx)):
-                        prob_v = probs.get(v) if v in probs.keys() else 0
+                        prob_v = probs.get(tgs_idx[v]) if tgs_idx[v] in probs.keys() else 0
                         prob_uv_given_t = pi[k - 1][t][u] * prob_v
-                        if prob_uv_given_t > max_prob:
-                            max_prob = prob_uv_given_t
-                            max_label = t
-
-                        bp[k][u][v] = max_label
-                        pi[k][u][v] = max_prob
+                        if prob_uv_given_t > pi[k][u][v]:
+                            pi[k][u][v] = prob_uv_given_t
+                            bp[k][u][v] = t
 
         # beam cropping
         if beam_k is not None:
