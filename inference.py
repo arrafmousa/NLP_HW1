@@ -49,6 +49,7 @@ def memm_viterbi(sentence, pre_trained_weights, feature2id, tags, beam_k=None):
     """
     tgs_idx = list(tags)
     tgs_idx.append("*")
+    tgs_idx.append("~")
     n = len(sentence)
     # pi [k,u,v] = what is the maximum probability of the sentence with length k to end in the labels u, v
     pi = np.zeros((n, len(tgs_idx), len(tgs_idx)))
@@ -67,14 +68,16 @@ def memm_viterbi(sentence, pre_trained_weights, feature2id, tags, beam_k=None):
         for u in range(len(tgs_idx)):  # w u v
             for t in range(len(tgs_idx)):
                 # find max and argmax
-                max_prob = -1
-                max_label = None
                 if pi[k - 1][t][u] == 0:
                     continue
                 else:
-                    probs = calculate_probability(sentence, [tgs_idx[t], tgs_idx[u]], k,
-                                                  pre_trained_weights,
-                                                  feature2id, tgs_idx)
+                    probs = None
+                    if sentence[k] == "~":
+                        probs = {"~": 1}
+                    else:
+                        probs = calculate_probability(sentence, [tgs_idx[t], tgs_idx[u]], k,
+                                                      pre_trained_weights,
+                                                      feature2id, tgs_idx)
                     for v in range(len(tgs_idx)):
                         prob_v = probs.get(tgs_idx[v]) if tgs_idx[v] in probs.keys() else 0
                         prob_uv_given_t = pi[k - 1][t][u] * prob_v
@@ -90,10 +93,12 @@ def memm_viterbi(sentence, pre_trained_weights, feature2id, tags, beam_k=None):
 
     pred_u, pred_v = unravel_index(pi[0].argmax(), pi[0].shape)
     predictions = []
-    for word in range(0, len(sentence)):
+    for word in range(len(sentence) - 1, -1, -1):
         pred_u, pred_v = pred_v, pi[word][pred_u].argmax()
+        predictions.append(bp[word][pred_u][pred_v])
         print("the word " + str(sentence[word]) + " was tagged " + str(tgs_idx[pred_u]))
-
+    del predictions[0]
+    del predictions[-1]
     return predictions
 
 
@@ -105,7 +110,7 @@ def tag_all_test(test_path, pre_trained_weights, feature2id, predictions_path, t
 
     for k, sen in tqdm(enumerate(test), total=len(test)):
         sentence = sen[0]
-        pred = memm_viterbi(sentence, pre_trained_weights, feature2id, tags, 5)[1:]
+        pred = memm_viterbi(sentence, pre_trained_weights, feature2id, tags)[1:]
         sentence = sentence[2:]
         for i in range(len(pred)):
             if i > 0:

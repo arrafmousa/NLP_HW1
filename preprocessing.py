@@ -372,7 +372,7 @@ class FeatureStatistics:
                         if cur_tag not in self.feature_rep_dict["fAllCapital"]:
                             self.feature_rep_dict["fAllCapital"][cur_tag] = 1
                         else:
-                            self.feature_rep_dict["fCapital"][cur_tag] += 1
+                            self.feature_rep_dict["fAllCapital"][cur_tag] += 1
                     # fNumeric
                     if cur_word.isnumeric():
                         if cur_tag not in self.feature_rep_dict["fNumeric"]:
@@ -605,7 +605,7 @@ def preprocess_train(train_path, threshold):
     statistics.get_k_wise_tag_count(train_path)
     statistics.get_next_word_current_tag_count(train_path)
     statistics.get_previous_word_current_tag_count(train_path)
-    statistics.get_capital_letter_tag_count(train_path)
+    statistics.get_features_tag_count(train_path)
     # feature2id
     feature2id = Feature2id(statistics, threshold)
     feature2id.get_features_idx()
