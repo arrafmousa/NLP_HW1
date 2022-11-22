@@ -400,7 +400,7 @@ class FeatureStatistics:
                         else:
                             self.feature_rep_dict["fFirst"][cur_tag] += 1
                     # fLast
-                    if word_idx == len(split_words):
+                    if word_idx == len(split_words)-1:
                         if cur_tag not in self.feature_rep_dict["fLast"]:
                             self.feature_rep_dict["fLast"][cur_tag] = 1
                         else:

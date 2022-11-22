@@ -5,6 +5,7 @@ from tqdm import tqdm
 import math
 import numpy as np
 from numpy import unravel_index
+import pandas as pd
 
 
 def calculate_probability(sentence, prev_tagging, index, v, feature2id: Feature2id, tags):
@@ -71,7 +72,6 @@ def memm_viterbi(sentence, pre_trained_weights, feature2id, tags, beam_k=None):
                 if pi[k - 1][t][u] == 0:
                     continue
                 else:
-                    probs = None
                     if sentence[k] == "~":
                         probs = {"~": 1}
                     else:
@@ -91,30 +91,49 @@ def memm_viterbi(sentence, pre_trained_weights, feature2id, tags, beam_k=None):
             threshold = min(pi[k].flatten()[idx[-beam_k:]])
             pi[k][pi[k][:][:] < threshold] = 0
 
-    pred_u, pred_v = unravel_index(pi[0].argmax(), pi[0].shape)
+    u, v = unravel_index(pi[len(sentence) - 1].argmax(), pi[len(sentence) - 1].shape)
     predictions = []
-    for word in range(len(sentence) - 1, -1, -1):
-        pred_u, pred_v = pred_v, pi[word][pred_u].argmax()
-        predictions.append(bp[word][pred_u][pred_v])
-        print("the word " + str(sentence[word]) + " was tagged " + str(tgs_idx[pred_u]))
-    del predictions[0]
-    del predictions[-1]
+    for word in range(len(sentence) - 1, 0, -1):
+        u = np.argmax(pi[word][:][int(v)])
+        t = bp[word][int(u)][int(v)]
+        predictions.append(tgs_idx[int(t)])
+        # print("the word " + str(sentence[word]) + " was tagged " + str(tgs_idx[int(t)]))
+        v = u
+    predictions.reverse()
+    predictions.append(".")
+    predictions.append("~")
     return predictions
 
 
 def tag_all_test(test_path, pre_trained_weights, feature2id, predictions_path, tags):
     tagged = "test" in test_path
     test = read_test(test_path, tagged=tagged)
-
+    correct_pred = 0
+    num_of_predictions = 0
     output_file = open(predictions_path, "a+")
-
+    tgs_idx = list(tags)
+    tgs_idx.append("*")
+    tgs_idx.append("~")
+    tgs_idx.append(".")
+    confusion_table = np.zeros((len(tgs_idx), len(tgs_idx)))
     for k, sen in tqdm(enumerate(test), total=len(test)):
         sentence = sen[0]
-        pred = memm_viterbi(sentence, pre_trained_weights, feature2id, tags)[1:]
+        pred = memm_viterbi(sentence, pre_trained_weights, feature2id, tags, 100)[1:]
         sentence = sentence[2:]
-        for i in range(len(pred)):
+        for i in range(min(len(pred), len(sentence))):
+            num_of_predictions += 1
             if i > 0:
                 output_file.write(" ")
             output_file.write(f"{sentence[i]}_{pred[i]}")
+            if sen[1][i] == pred[i]:
+                correct_pred += 1
+            try:
+                confusion_table[tgs_idx.index(pred[i])][tgs_idx.index(sen[1][i])] += 1
+            except:
+                pass
+
         output_file.write("\n")
+    print("Accuracy = " + str(correct_pred / num_of_predictions))
+    print(confusion_table)
+    pd.DataFrame(confusion_table).to_csv(str(test_path[-5:])+"confusion.csv")
     output_file.close()
